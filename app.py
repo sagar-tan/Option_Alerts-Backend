@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
-from db import Base, engine
+from db import Base, engine, SessionLocal
 from models import User
 from auth import hash_password, verify_password, create_token
 from alerts import bp_alerts
@@ -10,7 +10,7 @@ from markets import bp_market
 from scheduler import start_scheduler, run_cycle
 
 from sqlalchemy import select
-from db import SessionLocal
+import threading
 
 load_dotenv()
 
@@ -22,19 +22,25 @@ def create_app():
     @app.post("/register")
     def register():
         data = request.get_json(force=True) or {}
-        for f in ("username","email","password"):
-            if f not in data: return jsonify({"error": f"missing {f}"}), 400
+        for f in ("username", "email", "password"):
+            if f not in data:
+                return jsonify({"error": f"missing {f}"}), 400
         db = SessionLocal()
         try:
             # check unique
-            if db.execute(select(User).where(User.username==data["username"])).scalar_one_or_none():
-                return jsonify({"error":"username taken"}), 409
-            if db.execute(select(User).where(User.email==data["email"])).scalar_one_or_none():
-                return jsonify({"error":"email taken"}), 409
+            if db.execute(select(User).where(User.username == data["username"])).scalar_one_or_none():
+                return jsonify({"error": "username taken"}), 409
+            if db.execute(select(User).where(User.email == data["email"])).scalar_one_or_none():
+                return jsonify({"error": "email taken"}), 409
 
-            u = User(username=data["username"], email=data["email"], password_hash=hash_password(data["password"]))
-            db.add(u); db.commit()
-            return jsonify({"status":"ok"}), 201
+            u = User(
+                username=data["username"],
+                email=data["email"],
+                password_hash=hash_password(data["password"])
+            )
+            db.add(u)
+            db.commit()
+            return jsonify({"status": "ok"}), 201
         finally:
             db.close()
 
@@ -42,12 +48,12 @@ def create_app():
     def login():
         data = request.get_json(force=True) or {}
         if "email" not in data or "password" not in data:
-            return jsonify({"error":"missing credentials"}), 400
+            return jsonify({"error": "missing credentials"}), 400
         db = SessionLocal()
         try:
-            u = db.execute(select(User).where(User.email==data["email"])).scalar_one_or_none()
+            u = db.execute(select(User).where(User.email == data["email"])).scalar_one_or_none()
             if not u or not verify_password(u.password_hash, data["password"]):
-                return jsonify({"error":"invalid credentials"}), 401
+                return jsonify({"error": "invalid credentials"}), 401
             token = create_token(u.id)
             return jsonify({"token": token, "userId": u.id})
         finally:
@@ -57,17 +63,19 @@ def create_app():
     app.register_blueprint(bp_alerts)
     app.register_blueprint(bp_market)
 
-    # start first cycle immediately (fast feedback), then background scheduler
-    @app.before_first_request
-    def boot():
-        # run a one-off cycle so DB has data
+    # Run startup tasks in a background thread after app starts
+    def startup_tasks():
         try:
             run_cycle(symbols=("BANKNIFTY",))
         except Exception as e:
             print("Initial cycle failed:", e)
         start_scheduler()
 
+    with app.app_context():
+        threading.Thread(target=startup_tasks, daemon=True).start()
+
     return app
+
 
 app = create_app()
 
