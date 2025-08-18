@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 from db import Base, engine
 from models import User
 from auth import hash_password, verify_password, create_token
-from routes_alerts import bp_alerts
-from routes_market import bp_market
+from alerts import bp_alerts
+from markets import bp_market
 from scheduler import start_scheduler, run_cycle
 
 from sqlalchemy import select
