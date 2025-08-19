@@ -56,13 +56,14 @@ class OptionRow(Base):
 class Alert(Base):
     __tablename__ = "alerts"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    expiry_id = Column(Integer, ForeignKey("expiries.id", ondelete="CASCADE"), nullable=False)
-    strike_price = Column(Numeric, nullable=False)
-    option_type = Column(String(2), nullable=False)  # CE/PE
-    greek = Column(String(10), nullable=False)       # delta/gamma/theta/vega/rho
-    condition = Column(String(5), nullable=False)    # > < = >= <=
-    threshold = Column(Numeric, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    symbol = Column(String(50))
+    expiry = Column(Date)   # <-- FIX: it’s expiry, not expiry_id
+    strike_price = Column(Numeric)
+    option_type = Column(String(10))
+    greek = Column(String(10))
+    condition = Column(String(5))
+    threshold = Column(Numeric)
     triggered = Column(Boolean, default=False)
     triggered_at = Column(DateTime)
 

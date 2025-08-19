@@ -65,7 +65,7 @@ def create_alert():
 
         alert = Alert(
             user_id=user_id,
-            expiry_id=exp.id,
+            expiry=data["expiry"],
             strike_price=data["strike"],
             option_type=data["type"],
             greek=data["greek"],
