@@ -1,83 +1,68 @@
-import os
 from flask import Flask, request, jsonify
-from flask_cors import CORS
-from dotenv import load_dotenv
-from db import Base, engine, SessionLocal
-from models import User
-from auth import hash_password, verify_password, create_token
-from alerts import bp_alerts
-from markets import bp_market
-from scheduler import start_scheduler, run_cycle
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+import os
 
-from sqlalchemy import select
-import threading
+app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-load_dotenv()
+db = SQLAlchemy(app)
 
-def create_app():
-    app = Flask(__name__)
-    CORS(app)  # allow Android emulator/dev
-    Base.metadata.create_all(bind=engine)
+# --- MODELS ---
+class User(db.Model):
+    __tablename__ = "users"
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    password_hash = db.Column(db.Text, nullable=False)
 
-    @app.post("/register")
-    def register():
-        data = request.get_json(force=True) or {}
-        for f in ("username", "email", "password"):
-            if f not in data:
-                return jsonify({"error": f"missing {f}"}), 400
-        db = SessionLocal()
-        try:
-            # check unique
-            if db.execute(select(User).where(User.username == data["username"])).scalar_one_or_none():
-                return jsonify({"error": "username taken"}), 409
-            if db.execute(select(User).where(User.email == data["email"])).scalar_one_or_none():
-                return jsonify({"error": "email taken"}), 409
+class Alert(db.Model):
+    __tablename__ = "alerts"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    symbol = db.Column(db.String(50))
+    expiry = db.Column(db.Date)
+    strike_price = db.Column(db.Numeric)
+    option_type = db.Column(db.String(10))
+    greek = db.Column(db.String(10))
+    condition = db.Column(db.String(5))  # >, <, >=, <=, ==
+    threshold = db.Column(db.Numeric)
+    triggered = db.Column(db.Boolean, default=False)
+    triggered_at = db.Column(db.DateTime)
 
-            u = User(
-                username=data["username"],
-                email=data["email"],
-                password_hash=hash_password(data["password"])
-            )
-            db.add(u)
-            db.commit()
-            return jsonify({"status": "ok"}), 201
-        finally:
-            db.close()
+# --- ROUTES ---
+@app.route("/signup", methods=["POST"])
+def signup():
+    data = request.json
+    hashed_pw = generate_password_hash(data["password"])
+    user = User(username=data["username"], email=data["email"], password_hash=hashed_pw)
+    db.session.add(user)
+    db.session.commit()
+    return jsonify({"message": "User created"}), 201
 
-    @app.post("/login")
-    def login():
-        data = request.get_json(force=True) or {}
-        if "email" not in data or "password" not in data:
-            return jsonify({"error": "missing credentials"}), 400
-        db = SessionLocal()
-        try:
-            u = db.execute(select(User).where(User.email == data["email"])).scalar_one_or_none()
-            if not u or not verify_password(u.password_hash, data["password"]):
-                return jsonify({"error": "invalid credentials"}), 401
-            token = create_token(u.id)
-            return jsonify({"token": token, "userId": u.id})
-        finally:
-            db.close()
+@app.route("/alerts", methods=["POST"])
+def create_alert():
+    data = request.json
+    alert = Alert(**data)
+    db.session.add(alert)
+    db.session.commit()
+    return jsonify({"message": "Alert created"}), 201
 
-    # Blueprints
-    app.register_blueprint(bp_alerts)
-    app.register_blueprint(bp_market)
-
-    # Run startup tasks in a background thread after app starts
-    def startup_tasks():
-        try:
-            run_cycle(symbols=("BANKNIFTY",))
-        except Exception as e:
-            print("Initial cycle failed:", e)
-        start_scheduler()
-
-    with app.app_context():
-        threading.Thread(target=startup_tasks, daemon=True).start()
-
-    return app
-
-
-app = create_app()
+@app.route("/alerts", methods=["GET"])
+def list_alerts():
+    alerts = Alert.query.all()
+    return jsonify([{
+        "id": a.id,
+        "symbol": a.symbol,
+        "expiry": str(a.expiry),
+        "strike_price": float(a.strike_price),
+        "option_type": a.option_type,
+        "greek": a.greek,
+        "condition": a.condition,
+        "threshold": float(a.threshold),
+        "triggered": a.triggered
+    } for a in alerts])
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(debug=True)
