@@ -1,0 +1,107 @@
+{
+    "status": "success",
+    "data": [
+        {
+            "expiry": "2025-08-28",
+            "pcr": 0.0,
+            "strike_price": 22500.0,
+            "underlying_key": "NSE_INDEX|Nifty 50",
+            "underlying_spot_price": 25050.55,
+            "call_options": {
+                "instrument_key": "NSE_FO|71696",
+                "market_data": {
+                    "ltp": 2422.0,
+                    "volume": 0,
+                    "oi": 75.0,
+                    "close_price": 2422.0,
+                    "bid_price": 2297.5,
+                    "bid_qty": 1725,
+                    "ask_price": 2592.8,
+                    "ask_qty": 1725,
+                    "prev_oi": 150.0
+                },
+                "option_greeks": {
+                    "vega": 0.0,
+                    "theta": 0.0,
+                    "gamma": 0.0,
+                    "delta": 1.0,
+                    "iv": 0.0,
+                    "pop": 99.0
+                }
+            },
+            "put_options": {
+                "instrument_key": "NSE_FO|71705",
+                "market_data": {
+                    "ltp": 1.85,
+                    "volume": 4935675,
+                    "oi": 2255700.0,
+                    "close_price": 2.45,
+                    "bid_price": 1.85,
+                    "bid_qty": 12525,
+                    "ask_price": 1.9,
+                    "ask_qty": 1200,
+                    "prev_oi": 1904400.0
+                },
+                "option_greeks": {
+                    "vega": 0.5654,
+                    "theta": -0.9791,
+                    "gamma": 0.0,
+                    "delta": -0.0053,
+                    "iv": 27.71,
+                    "pop": 0.59
+                }
+            }
+        },
+        {
+            "expiry": "2025-08-28",
+            "pcr": 0.0,
+            "strike_price": 22550.0,
+            "underlying_key": "NSE_INDEX|Nifty 50",
+            "underlying_spot_price": 25050.55,
+            "call_options": {
+                "instrument_key": "NSE_FO|71700",
+                "market_data": {
+                    "ltp": 2387.0,
+                    "volume": 0,
+                    "oi": 75.0,
+                    "close_price": 2387.0,
+                    "bid_price": 2265.5,
+                    "bid_qty": 1725,
+                    "ask_price": 2592.8,
+                    "ask_qty": 1725,
+                    "prev_oi": 150.0
+                },
+                "option_greeks": {
+                    "vega": 0.0,
+                    "theta": 0.0,
+                    "gamma": 0.0,
+                    "delta": 1.0,
+                    "iv": 0.0,
+                    "pop": 99.0
+                }
+            },
+            "put_options": {
+                "instrument_key": "NSE_FO|71701",
+                "market_data": {
+                    "ltp": 1.8,
+                    "volume": 4935675,
+                    "oi": 2255700.0,
+                    "close_price": 2.45,
+                    "bid_price": 1.8,
+                    "bid_qty": 12525,
+                    "ask_price": 1.85,
+                    "ask_qty": 1200,
+                    "prev_oi": 1904400.0
+                },
+                "option_greeks": {
+                    "vega": 0.5654,
+                    "theta": -0.9791,
+                    "gamma": 0.0,
+                    "delta": -0.0053,
+                    "iv": 27.71,
+                    "pop": 0.59
+                }
+            }
+        }
+    ]
+}

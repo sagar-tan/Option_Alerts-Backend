@@ -9,3 +9,7 @@ APScheduler==3.11.0
 dotenv==1.1.1
 APScheduler==3.10.4
 jwt==1.4.0
+requests==2.32.5
+requests-oauthlib==2.0.0
+requests-toolbelt==1.0.0
+Flask-SQLAlchemy==3.1.1

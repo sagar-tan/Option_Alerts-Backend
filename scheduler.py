@@ -1,3 +1,5 @@
+#scheduler processes option chain data from Upstox API
+# and evaluates alerts
 import requests
 import os
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -5,7 +7,7 @@ from app import db, Alert  # reuse models
 from datetime import datetime
 
 UPSTOX_URL = "https://api.upstox.com/v2/option/chain"
-INTERVAL = int(os.getenv("SCHEDULER_INTERVAL", 20))
+INTERVAL = int(os.getenv("SCHEDULER_INTERVAL", 1))
 
 scheduler = BlockingScheduler()
 
